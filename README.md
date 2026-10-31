@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="https://github.com/KiegsGit/SkyBreaker---Beta-Testing-/releases/latest"><img alt="Download" src="https://img.shields.io/badge/Download-latest%20jar-2f6bff?style=for-the-badge"></a>
-  <img alt="Minecraft" src="https://img.shields.io/badge/Minecraft-26.3-3fae49?style=for-the-badge">
-  <img alt="Loader" src="https://img.shields.io/badge/Fabric-required-dbd0b4?style=for-the-badge">
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge">
+  <a href="https://fabricmc.net/use/"><img alt="Minecraft" src="https://img.shields.io/badge/Minecraft-26.3-3fae49?style=for-the-badge"></a>
+  <a href="https://fabricmc.net/use/"><img alt="Fabric" src="https://img.shields.io/badge/Fabric-required-dbd0b4?style=for-the-badge"></a>
+  <a href="https://github.com/KiegsGit/SkyBreaker---Beta-Testing-/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge"></a>
 </p>
 
 ---
