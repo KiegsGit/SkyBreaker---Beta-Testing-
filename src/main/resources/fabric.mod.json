@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "skybreaker",
+	"version": "${version}",
+	"name": "Skybreaker: Orbital Arsenal",
+	"description": "Eight orbital strike remotes - Railgun, Satellite Laser, Meteor Barrage, Singularity Cannon, EMP, Napalm, Tactical Nuke and Tracking Strike - with cinematic cameras, custom sound and a full config.",
+	"authors": ["Skybreaker"],
+	"license": "MIT",
+	"icon": "assets/skybreaker/icon.png",
+	"contact": {
+		"homepage": "https://github.com/KiegsGit/SkyBreaker-v3-BETA-",
+		"sources": "https://github.com/KiegsGit/SkyBreaker-v3-BETA-",
+		"issues": "https://github.com/KiegsGit/SkyBreaker-v3-BETA-/issues"
+	},
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.skybreaker.SkybreakerMod"],
+		"client": ["com.skybreaker.client.SkybreakerClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.0",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
