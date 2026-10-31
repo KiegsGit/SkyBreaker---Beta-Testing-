@@ -49,7 +49,7 @@ The **Tracking Strike** is different: aim at a **mob or player** to lock on. It 
 | **Tracking Strike** | Locks onto a mob or player and strikes where they end up. | 20s | Ender Eye, Spyglass, Netherite Ingot |
 | **Targeting Chip** | Hold in the other hand: remotes recharge 40% faster. | n/a | Redstone, Diamond, Ender Eye |
 
-All remotes are in the **Combat** creative tab. Cooldowns above are the defaults and can be changed in the config.
+All remotes are in their own **Skybreaker: Orbital Arsenal** creative tab (the one with the railgun icon). Cooldowns above are the defaults and can be changed in the config.
 
 ## Commands
 

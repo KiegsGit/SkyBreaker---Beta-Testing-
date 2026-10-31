@@ -222,6 +222,9 @@ final class CinematicHud {
 			int span = Math.max(1, h - 2 * barH);
 			int sy = barH + (age * 9) % span;
 			g.fill(0, sy, w, sy + 1, argb(70, bracketRgb));
+			if (age < total && bar > 0.6f && !pulling) {
+				scanFrame(g, w, h, barH, bracketRgb, bar);
+			}
 
 			if (age < total) {
 				float prog = age / (float) total;
@@ -367,6 +370,38 @@ final class CinematicHud {
 		}
 	}
 
+
+	/** Glowing rectangular targeting frame with slow scan bands, like the lock-on overlay in the reference video. */
+	private static void scanFrame(GuiGraphicsExtractor g, int w, int h, int barH, int rgb, float k) {
+		int x0 = (int) (w * 0.05f);
+		int x1 = w - x0;
+		int y0 = barH + (int) (h * 0.05f);
+		int y1 = h - barH - (int) (h * 0.05f);
+		if (y1 - y0 < 40) {
+			return;
+		}
+		// faint tint inside the frame
+		g.fill(x0, y0, x1, y1, argb((int) (12 * k), rgb));
+		// soft outer glow: three stacked outlines fading out, then the hard bright line
+		for (int i = 3; i >= 1; i--) {
+			frame(g, x0 - i, y0 - i, x1 + i, y1 + i, argb((int) (34 * k / i), rgb));
+		}
+		frame(g, x0, y0, x1, y1, argb((int) (230 * k), rgb));
+		// three scan bands drifting down the frame
+		int span = y1 - y0 - 6;
+		for (int n = 0; n < 3; n++) {
+			int by = y0 + 2 + (age * 2 + n * span / 3) % span;
+			g.fill(x0 + 1, by, x1, by + 3, argb((int) (26 * k), rgb));
+			g.fill(x0 + 1, by + 1, x1, by + 2, argb((int) (40 * k), rgb));
+		}
+	}
+
+	private static void frame(GuiGraphicsExtractor g, int x0, int y0, int x1, int y1, int color) {
+		g.fill(x0, y0, x1 + 1, y0 + 1, color);
+		g.fill(x0, y1, x1 + 1, y1 + 1, color);
+		g.fill(x0, y0 + 1, x0 + 1, y1, color);
+		g.fill(x1, y0 + 1, x1 + 1, y1, color);
+	}
 
 	private static void bracket(GuiGraphicsExtractor g, int x, int y, int len, int dx, int dy, int color) {
 		// horizontal arm

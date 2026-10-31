@@ -186,52 +186,48 @@ final class RailgunFx extends Fx {
 
 	private void charge() {
 		double prog = age / (double) countdown;
-		double rot = age * 0.22;
-		// fixed futuristic targeting ring + 4 rotating spokes
-		Pt.ring(ModParticles.PLASMA, pos, 3.6, 40, rot * 0.5, 0.12, 0.0, 0.0);
+		double rot = age * 0.18;
+		// fixed targeting ring: continuous thin line plus four evenly spaced ticks
+		Pt.ring(ModParticles.ZAP, pos, 3.6, 72, 0.0, 0.12, 0.0, 0.0);
 		for (int k = 0; k < 4; k++) {
-			double a = rot * 0.6 + k * Math.PI / 2.0;
-			for (int s = 0; s < 6; s++) {
-				double r = 1.2 + s * 0.65;
-				Pt.add(ModParticles.ZAP, pos.x + Math.cos(a) * r, pos.y + 0.15, pos.z + Math.sin(a) * r, 0, 0, 0);
+			double a = k * Math.PI / 2.0 + Math.PI / 4.0;
+			for (int s = 0; s < 4; s++) {
+				double r = 2.6 + s * 0.5;
+				Pt.add(ModParticles.ZAP, pos.x + Math.cos(a) * r, pos.y + 0.12, pos.z + Math.sin(a) * r, 0, 0, 0);
 			}
 		}
-		// converging lock-on ring
+		// converging lock-on ring, one clean circle that closes in
 		double r2 = 8.0 - 6.2 * prog;
-		Pt.ring(ModParticles.ZAP, pos, r2, 30, -rot * 1.4, 0.15, 0.0, 0.0);
-		// orbital guide beam that grows brighter as the shot approaches
-		int n = 3 + (int) (prog * prog * 40);
-		double width = 0.05 + 0.3 * prog;
-		for (int i = 0; i < n; i++) {
-			double h = Pt.rnd() * 95.0;
-			Pt.add(ModParticles.ZAP, pos.x + Pt.sym() * width, pos.y + h, pos.z + Pt.sym() * width, 0, 0, 0);
+		Pt.ring(ModParticles.PLASMA, pos, r2, 48, rot, 0.15, 0.0, 0.0);
+		// guide beam: a straight line that gets denser and grows a thin tube as the shot approaches
+		double step = 3.0 - 2.0 * prog;
+		Pt.column(ModParticles.ZAP, pos.x, pos.y, pos.z, (age * 1.7) % step, 95.0, step);
+		if (prog > 0.5) {
+			Pt.tube(ModParticles.ZAP, pos.x, pos.y, pos.z, 0.0, 95.0, 0.25 + 0.25 * prog, 6, 6.0 - 3.0 * prog, rot);
 		}
-		if (age % 2 == 0) {
-			for (int i = 0; i < 4; i++) {
-				double h = 40.0 + Pt.rnd() * 60.0;
-				Pt.add(ModParticles.CORE, pos.x + Pt.sym() * 0.2, pos.y + h, pos.z + Pt.sym() * 0.2, 0, -0.9, 0);
+		// data packets sliding down the beam
+		if (age % 3 == 0) {
+			for (int i = 0; i < 3; i++) {
+				Pt.add(ModParticles.CORE, pos.x, pos.y + 95.0 - i * 18.0, pos.z, 0, -2.4, 0);
 			}
 		}
-		// ground glow in the last second
+		// ground ring in the last second
 		if (age > countdown - 20) {
-			Pt.ring(ModParticles.CORE, pos, 1.0 + Pt.rnd() * 2.0, 3, Pt.rnd() * 6.28, 0.1, 0.0, 0.15);
+			double k = (age - (countdown - 20)) / 20.0;
+			Pt.ring(ModParticles.CORE, pos, 2.4 * (1.0 - k) + 0.4, 36, -rot, 0.1, 0.0, 0.0);
 		}
 	}
 
 	private void bolt() {
 		double t = (age - countdown) / (double) bolt;
 		double head = SKY * (1.0 - t);
-		// the beam column, brightest at the falling head
-		for (double h = head; h <= SKY; h += 1.0) {
-			double a = Pt.rnd() * Math.PI * 2.0;
-			double rr = Pt.rnd() * 0.9;
-			Pt.add(ModParticles.CORE, pos.x + Math.cos(a) * rr, pos.y + h, pos.z + Math.sin(a) * rr, 0, -0.4, 0);
-			if (((int) h) % 2 == 0) {
-				Pt.add(ModParticles.ZAP, pos.x + Pt.sym() * 1.4, pos.y + h, pos.z + Pt.sym() * 1.4, 0, 0, 0);
-			}
-		}
-		Pt.burst(ModParticles.CORE, new Vec3(pos.x, pos.y + head, pos.z), 14, 0.2, 0.8, 0.0);
-		Pt.ring(ModParticles.ZAP, pos, 1.5, 16, Pt.rnd(), 0.2, 0.5, 0.1);
+		// the beam: white centre line, a tight tube, and a wide faint tube, all perfectly straight
+		Pt.column(ModParticles.CORE, pos.x, pos.y, pos.z, head, SKY, 1.0);
+		Pt.tube(ModParticles.CORE, pos.x, pos.y, pos.z, head, SKY, 0.8, 10, 4.0, 0.0);
+		Pt.tube(ModParticles.ZAP, pos.x, pos.y, pos.z, head, SKY, 1.7, 14, 8.0, 0.4);
+		// shock ring riding the head of the beam
+		Pt.ring(ModParticles.PLASMA, new Vec3(pos.x, pos.y + head, pos.z), 2.4, 28, age * 0.5, 0.0, 0.0, 0.0);
+		Pt.ring(ModParticles.ZAP, pos, 1.5, 24, 0.0, 0.2, 0.5, 0.0);
 		if (age == countdown + bolt) {
 			impact();
 		}
@@ -239,30 +235,32 @@ final class RailgunFx extends Fx {
 
 	private void impact() {
 		Vec3 c = new Vec3(pos.x, pos.y + 0.5, pos.z);
-		Pt.explosion(c, 5.0);
 		Pt.add(ModParticles.FLARE, c.x, c.y + 0.5, c.z, 0, 0, 0);
-		Pt.burst(ModParticles.CORE, c, 260, 0.6, 2.4, 0.15);
-		Pt.burst(ModParticles.ZAP, c, 160, 1.0, 2.8, 0.2);
-		Pt.burst(ModParticles.DUST, c, 70, 0.3, 1.2, 0.5);
-		Pt.burst(ModParticles.SPARK, c, 60, 0.5, 1.6, 0.4);
+		Pt.explosion(c, 4.0);
+		// radial light streaks along the ground, then two clean expanding shock rings
+		Pt.spokes(ModParticles.ZAP, c, 36, 1.2, 13.0, 1.0, 0.1, 0.45, 0.0);
+		Pt.ring(ModParticles.CORE, c, 1.0, 96, 0.0, 0.15, 1.15, 0.0);
+		Pt.ring(ModParticles.PLASMA, c, 1.0, 64, 0.0, 0.4, 0.6, 0.0);
+		// a short, controlled burst of sparks instead of a big random cloud
+		Pt.burst(ModParticles.SPARK, c, 70, 0.5, 1.8, 0.4);
+		Pt.burst(ModParticles.DUST, c, 40, 0.3, 1.1, 0.5);
 	}
 
 	private void aftermath() {
 		int s = age - (countdown + bolt);
 		double maxR = radius * 2.3;
 		double r = Math.min(maxR, s * 0.95);
-		int n = (int) Math.min(170, 24 + r * 7);
-		Pt.ring(ModParticles.DUST, pos, r, n, 0.0, 0.3, 0.05, 0.02);
-		Pt.ring(ModParticles.ZAP, pos, r * 0.85, n / 2, 0.5, 0.4, 0.0, 0.05);
+		int n = (int) Math.min(220, 40 + r * 8);
+		Pt.ring(ModParticles.ZAP, pos, r, n, 0.0, 0.3, 0.0, 0.02);
+		Pt.ring(ModParticles.DUST, pos, r * 0.85, n / 5, 0.5, 0.4, 0.04, 0.05);
 		if (s < 12) {
-			int cnt = (int) (45 * (1.0 - s / 12.0));
-			for (int i = 0; i < cnt; i++) {
-				double h = Pt.rnd() * 80.0;
-				Pt.add(ModParticles.CORE, pos.x + Pt.sym() * 0.8, pos.y + h, pos.z + Pt.sym() * 0.8, 0, -0.3, 0);
-			}
+			// the beam column fades out by thinning, not by flickering
+			double stepUp = 1.0 + s * 0.35;
+			Pt.column(ModParticles.CORE, pos.x, pos.y, pos.z, 0.0, 80.0, stepUp);
+			Pt.tube(ModParticles.ZAP, pos.x, pos.y, pos.z, 0.0, 80.0, 0.8 + s * 0.12, 10, 5.0 + s, 0.0);
 		}
 		if (s < 35) {
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 4; i++) {
 				Pt.add(ModParticles.SMOKE, pos.x + Pt.sym() * radius * 0.5, pos.y + 0.5, pos.z + Pt.sym() * radius * 0.5, 0, 0.12 + Pt.rnd() * 0.1, 0);
 			}
 		}
@@ -741,20 +739,20 @@ final class GlowProvider implements ParticleProvider<SimpleParticleType> {
 final class ParticleSetup {
 	static void register() {
 		//   type                  size   jitter life
-		reg(ModParticles.PLASMA,  0.32f, 0.25f, 10);
-		reg(ModParticles.CORE,    0.16f, 0.20f, 7);
-		reg(ModParticles.BOLT,    0.55f, 0.20f, 7);
-		reg(ModParticles.ZAP,     0.13f, 0.30f, 9);
-		reg(ModParticles.SPARK,   0.10f, 0.50f, 16);
-		reg(ModParticles.EMBER,   0.16f, 0.40f, 34);
+		reg(ModParticles.PLASMA,  0.22f, 0.15f, 10);
+		reg(ModParticles.CORE,    0.12f, 0.10f, 7);
+		reg(ModParticles.BOLT,    0.34f, 0.15f, 7);
+		reg(ModParticles.ZAP,     0.10f, 0.15f, 9);
+		reg(ModParticles.SPARK,   0.08f, 0.40f, 16);
+		reg(ModParticles.EMBER,   0.13f, 0.40f, 34);
 		reg(ModParticles.FIRE,    1.30f, 0.50f, 24);
 		reg(ModParticles.SMOKE,   1.90f, 0.50f, 60);
-		reg(ModParticles.FLARE,   5.50f, 0.00f, 7);
+		reg(ModParticles.FLARE,   4.50f, 0.00f, 7);
 		reg(ModParticles.VOID_S,  0.90f, 0.00f, 3);
 		reg(ModParticles.VOID_M,  1.80f, 0.00f, 3);
 		reg(ModParticles.VOID_L,  2.90f, 0.00f, 3);
 		reg(ModParticles.DISK,    4.50f, 0.00f, 3);
-		reg(ModParticles.WISP,    0.50f, 0.40f, 12);
+		reg(ModParticles.WISP,    0.30f, 0.25f, 12);
 		reg(ModParticles.DUST,    0.90f, 0.50f, 36);
 	}
 
@@ -806,6 +804,37 @@ final class Pt {
 			double len = Math.max(0.001, Math.sqrt(vx * vx + vy * vy + vz * vz));
 			double s = minSpeed + rnd() * (maxSpeed - minSpeed);
 			add(o, c.x, c.y, c.z, vx / len * s, vy / len * s + upBias, vz / len * s);
+		}
+	}
+
+	/** Hollow vertical tube made of evenly spaced rings: a crisp outline instead of a random cloud. */
+	static void tube(ParticleOptions o, double x, double y, double z, double h0, double h1, double r, int sides, double step, double phase) {
+		for (double h = h0; h <= h1; h += step) {
+			for (int i = 0; i < sides; i++) {
+				double a = phase + i * (Math.PI * 2.0 / sides) + h * 0.05;
+				add(o, x + Math.cos(a) * r, y + h, z + Math.sin(a) * r, 0, 0, 0);
+			}
+		}
+	}
+
+	/** Perfectly straight vertical line of points. */
+	static void column(ParticleOptions o, double x, double y, double z, double h0, double h1, double step) {
+		for (double h = h0; h <= h1; h += step) {
+			add(o, x, y + h, z, 0, 0, 0);
+		}
+	}
+
+	/** Evenly spaced light streaks flying out of c along the ground (the radial burst at an impact). */
+	static void spokes(ParticleOptions o, Vec3 c, int n, double r0, double r1, double step, double yOff, double outSpeed, double phase) {
+		for (int i = 0; i < n; i++) {
+			double a = phase + i * (Math.PI * 2.0 / n);
+			double cx = Math.cos(a);
+			double sz = Math.sin(a);
+			// every third spoke is longer, so the burst has a rhythm instead of looking uniform
+			double end = (i % 3 == 0) ? r1 : r1 * 0.65;
+			for (double r = r0; r <= end; r += step) {
+				add(o, c.x + cx * r, c.y + yOff, c.z + sz * r, cx * outSpeed, 0.0, sz * outSpeed);
+			}
 		}
 	}
 

@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 
 import java.util.Arrays;
@@ -45,19 +46,55 @@ public final class ModItems {
 
 	private static final ResourceKey<CreativeModeTab> COMBAT_TAB =
 		ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath("minecraft", "combat"));
+	private static final ResourceKey<CreativeModeTab> SKYBREAKER_TAB =
+		ResourceKey.create(Registries.CREATIVE_MODE_TAB, SkybreakerMod.id("skybreaker"));
+
+	/** Every item of the mod, in tab order. */
+	private static final Item[] ALL = {
+		ORBITAL_RAILGUN, SATELLITE_LASER, METEOR_BARRAGE, BLACK_HOLE,
+		EMP_PULSE, ORBITAL_NAPALM, TACTICAL_NUKE, TRACKING_STRIKE, TARGETING_CHIP
+	};
+
+	/**
+	 * Fabric's tab-builder class has been renamed between versions, so it is looked up by name. If none of the known
+	 * names exists the items simply go into the Combat tab, and the game still starts and works.
+	 */
+	private static CreativeModeTab.Builder fabricTabBuilder() {
+		String[] classes = {
+			"net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab",
+			"net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup"
+		};
+		for (String name : classes) {
+			try {
+				return (CreativeModeTab.Builder) Class.forName(name).getMethod("builder").invoke(null);
+			} catch (ReflectiveOperationException | LinkageError | ClassCastException ignored) {
+				// try the next name
+			}
+		}
+		return null;
+	}
 
 	public static void init() {
-		CreativeModeTabEvents.modifyOutputEvent(COMBAT_TAB).register(output -> {
-			output.accept(ORBITAL_RAILGUN);
-			output.accept(SATELLITE_LASER);
-			output.accept(METEOR_BARRAGE);
-			output.accept(BLACK_HOLE);
-			output.accept(EMP_PULSE);
-			output.accept(ORBITAL_NAPALM);
-			output.accept(TACTICAL_NUKE);
-			output.accept(TRACKING_STRIKE);
-			output.accept(TARGETING_CHIP);
-		});
+		CreativeModeTab.Builder builder = fabricTabBuilder();
+		if (builder != null) {
+			CreativeModeTab tab = builder
+				.title(Component.translatable("itemGroup.skybreaker"))
+				.icon(() -> new ItemStack(ORBITAL_RAILGUN))
+				.displayItems((params, output) -> {
+					for (Item item : ALL) {
+						output.accept(item);
+					}
+				})
+				.build();
+			Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, SKYBREAKER_TAB, tab);
+		} else {
+			SkybreakerMod.LOGGER.warn("Fabric creative-tab builder not found, adding Skybreaker items to the Combat tab instead.");
+			CreativeModeTabEvents.modifyOutputEvent(COMBAT_TAB).register(output -> {
+				for (Item item : ALL) {
+					output.accept(item);
+				}
+			});
+		}
 	}
 
 	private ModItems() {
