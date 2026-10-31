@@ -1,6 +1,8 @@
 name: Build Skybreaker
 
 # Runs on every push, and can be started manually from the "Actions" tab.
+# RELEASES: every update gets its OWN release (tag v<version>, version from gradle.properties). Old releases are kept.
+# To ship an update: bump `version` in gradle.properties and add .github/changes/<version>.md.
 on:
   push:
   workflow_dispatch:
@@ -14,6 +16,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Read mod version
+        run: echo "VERSION=$(grep '^version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')" >> "$GITHUB_ENV"
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -33,24 +38,30 @@ jobs:
       - name: Upload jar as workflow artifact
         uses: actions/upload-artifact@v7
         with:
-          name: skybreaker-26.3
-          path: build/libs/skybreaker-26.3.jar
+          name: skybreaker-${{ env.VERSION }}
+          path: build/libs/skybreaker-${{ env.VERSION }}.jar
 
-      - name: Publish jar to a GitHub Release (direct .jar download)
+      - name: Publish a NEW GitHub Release for this version (direct .jar download)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
         run: |
-          VERSION=26.3
+          CHANGES=".github/changes/$VERSION.md"
+          if [ ! -f "$CHANGES" ]; then
+            echo "::warning::Missing $CHANGES - add release notes for this version."
+            echo "No change notes were written for this version." > "$CHANGES"
+          fi
           sed -e "s|__REPO__|$REPO|g" \
               -e "s|__SHA__|$SHA|g" \
               -e "s|__SHORT__|${SHA:0:7}|g" \
               -e "s|__VERSION__|$VERSION|g" \
+              -e "/__CHANGES__/{r $CHANGES" -e "d}" \
               .github/release-notes.md > release-notes.md
-          gh release delete latest --yes --cleanup-tag || true
-          gh release create latest build/libs/skybreaker-$VERSION.jar \
-            --title "Skybreaker: Orbital Arsenal $VERSION" \
+          # Only re-publish the SAME version's release (a re-run of this push). Other versions are never touched.
+          gh release delete "v$VERSION" --yes --cleanup-tag || true
+          gh release create "v$VERSION" build/libs/skybreaker-$VERSION.jar \
+            --title "Skybreaker: Orbital Arsenal v$VERSION" \
             --notes-file release-notes.md \
             --target "$SHA" \
             --latest
