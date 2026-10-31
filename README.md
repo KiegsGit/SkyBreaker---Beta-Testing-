@@ -21,7 +21,7 @@
 
 1. Install [Fabric Loader](https://fabricmc.net/use/) for **Minecraft 26.3** (Java 25).
 2. Download [Fabric API](https://modrinth.com/mod/fabric-api) and put it in your `mods` folder.
-3. Download `skybreaker-26.3.jar` from the [latest release](https://github.com/KiegsGit/SkyBreaker---Beta-Testing-/releases/latest) and drop it in the same `mods` folder.
+3. Download the newest `skybreaker-<number>.jar` from the [latest release](https://github.com/KiegsGit/SkyBreaker---Beta-Testing-/releases/latest) and drop it in the same `mods` folder.
 4. Launch the game. The config is generated at `config/skybreaker.json`.
 
 > Works in singleplayer and on servers. Install it on the server **and** on every client that should see the effects.
@@ -33,7 +33,7 @@
 3. **Right-click** to fire. A short countdown plays, then the strike lands.
 4. The remote goes on cooldown. Hold a **Targeting Chip** in your off-hand to recharge **40% faster**.
 
-The **Tracking Strike** is different: aim at a **mob or player** to lock on. It follows them and strikes where they end up.
+The **Tracking Strike** is different: aim at a **mob or player** to lock on. It follows them and strikes where they end up. There is no cutscene for it: you keep full control and see the lock ring, a beam from the sky and a light trail stick to the target in the real world until it locks and strikes. Other remotes only take over the screen for a short orbital intro, then the countdown runs over the live world.
 
 ## The arsenal
 
