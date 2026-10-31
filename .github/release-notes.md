@@ -2,9 +2,13 @@
   <img src="https://raw.githubusercontent.com/__REPO__/__SHA__/docs/header.png" width="640" alt="Skybreaker: Orbital Arsenal">
 </p>
 
-# Skybreaker: Orbital Arsenal __VERSION__
+# Skybreaker: Orbital Arsenal v__VERSION__
 
 **Call down the sky.** Eight orbital strike remotes with cinematic cameras, slow-motion impacts, custom sounds and a full config.
+
+## What's new in v__VERSION__
+
+__CHANGES__
 
 ## Download
 
