@@ -3,25 +3,21 @@
 Newest first. Every update gets a new version number, an entry here, and its own release notes file
 (`.github/changes/<number>.md`), written as NEW / FIXED / CHANGES.
 
-## v12
+## v1
 
 ### NEW
-- Tracking Strike live lock: ring on the ground, ring around the target, sky beam and light trail follow the target every tick.
+- Eight orbital strike remotes: Orbital Railgun, Satellite Laser, Meteor Barrage, Singularity Cannon, EMP Pulse, Orbital Napalm, Tactical Nuke and Tracking Strike, plus the Targeting Chip.
+- Tracking Strike live lock: a ring on the ground, a ring around the target, a beam from the sky and a light trail follow the target every tick.
 - `TRACKING` / `LOCKED` readout with live coordinates and range.
+- Custom sounds, slow-motion impacts and a full config.
 
 ### FIXED
-- Tracking Strike: you couldn't see if it really tracks (fullscreen cutscene + forced camera). No cutscene now.
-- Orbital cutscene no longer covers the whole countdown of the other remotes.
-- White fade before impact hid the strike landing. Removed.
-- FIRE / COLLAPSE text blocked the middle of the screen. Smaller and moved up.
+- Tracking Strike: you can see that it really tracks. No cutscene, you keep full control.
+- The orbital cutscene no longer covers the whole countdown.
+- No white fade before impact, so you see the strike land.
+- FIRE / COLLAPSE text no longer blocks the middle of the screen.
 
 ### CHANGES
-- Orbital intro shortened to 1.5 seconds; countdown then runs over the real world (slim bars, small timer, no tint).
-- Particle textures redrawn clean (smooth anti-aliased glows).
-- Every update now gets its own release (v12, v13, ...). Old releases are kept.
-
-## v11 and earlier
-
-- Eight remotes (Railgun, Laser, Meteor, Singularity, EMP, Napalm, Nuke, Tracking Strike) + Targeting Chip.
-- Orbital cutscene on every remote, custom sounds, full config.
-- Published as a single rolling `latest` release (replaced on every push).
+- Short 1.5 second orbital intro, then the countdown runs over the real world (slim bars, small timer, no tint).
+- Clean particle textures: smooth, anti-aliased glows instead of blocky pixels.
+- Every update gets its own release (v1, v2, v3, ...). Old releases are kept.
