@@ -8,9 +8,9 @@
 	"license": "MIT",
 	"icon": "assets/skybreaker/icon.png",
 	"contact": {
-		"homepage": "https://github.com/KiegsGit/SkyBreaker-v3-BETA-",
-		"sources": "https://github.com/KiegsGit/SkyBreaker-v3-BETA-",
-		"issues": "https://github.com/KiegsGit/SkyBreaker-v3-BETA-/issues"
+		"homepage": "https://github.com/KiegsGit/SkyBreaker---Beta-Testing-",
+		"sources": "https://github.com/KiegsGit/SkyBreaker---Beta-Testing-",
+		"issues": "https://github.com/KiegsGit/SkyBreaker---Beta-Testing-/issues"
 	},
 	"environment": "*",
 	"entrypoints": {
