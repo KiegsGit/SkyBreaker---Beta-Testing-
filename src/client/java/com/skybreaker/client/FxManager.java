@@ -60,7 +60,10 @@ final class FxManager {
 			case FxPayload.EMP -> ACTIVE.add(new EmpFx(pos, p.a(), p.f()));
 			case FxPayload.NAPALM -> ACTIVE.add(new NapalmFx(pos, p.a(), p.b(), p.f()));
 			case FxPayload.NUKE -> ACTIVE.add(new NukeFx(pos, p.a(), p.f()));
-			case FxPayload.MARK -> ACTIVE.add(new MarkFx(pos, p.f()));
+			case FxPayload.MARK -> {
+				ACTIVE.add(new MarkFx(pos, p.f(), p.b() > 0 ? p.b() / 10.0 : 1.8));
+				CinematicHud.track(pos);
+			}
 			case FxPayload.BLACKHOLE -> ACTIVE.add(new BlackHoleFx(pos, p.a(), p.b(), p.f(), p.data()));
 			case FxPayload.CINEMA -> {
 				CinematicHud.start(p);

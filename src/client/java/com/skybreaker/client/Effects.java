@@ -1014,20 +1014,49 @@ final class NukeFx extends Fx {
 	}
 }
 
-/** One-tick lock-on ring. */
+/**
+ * Live lock-on marker for the Tracking Strike. The server sends one every tick while the target is being followed,
+ * so this is drawn fresh at the target's CURRENT position each tick: a spinning ring on the ground, a ring around
+ * the body, a guide beam from the sky onto the target and a short trail of where it just was. Because the world is
+ * never hidden by a cutscene, you can watch the lock stick to a moving target.
+ */
 final class MarkFx extends Fx {
 	private final double radius;
+	private final double height;
+	private static Vec3 prev = null;
+	private static long prevTime = 0L;
 
-	MarkFx(Vec3 pos, double radius) {
+	MarkFx(Vec3 pos, double radius, double height) {
 		super(pos);
 		this.radius = radius;
+		this.height = height;
 	}
 
 	@Override
 	boolean tick(ClientLevel level) {
 		Pt.level = level;
-		Pt.ring(ModParticles.PLASMA, pos.add(0.0, 0.1, 0.0), radius, 14, 0.0, 0.0, 0.0, 0.02);
-		Pt.add(ModParticles.CORE, pos.x, pos.y + 0.2, pos.z, 0, 0.05, 0);
+		long now = System.currentTimeMillis();
+		double rot = (now / 50L) * 0.35;
+		// ground ring and a counter-rotating ring around the body
+		Pt.ring(ModParticles.ZAP, pos.add(0.0, 0.08, 0.0), radius, 20, rot, 0.0, 0.0, 0.0);
+		Pt.ring(ModParticles.PLASMA, pos.add(0.0, height * 0.5, 0.0), radius * 0.8, 10, -rot, 0.0, 0.0, 0.0);
+		// guide beam: a dotted line from the sky straight down onto the target, plus a marker above the head
+		Pt.column(ModParticles.ZAP, pos.x, pos.y + height + 0.4, pos.z, 0.0, 40.0, 2.5);
+		Pt.add(ModParticles.CORE, pos.x, pos.y + height + 0.5, pos.z, 0.0, 0.0, 0.0);
+		// trail: a thin line of light from the previous marker, showing which way the target is moving
+		if (prev != null && now - prevTime <= 200L) {
+			Vec3 d = pos.subtract(prev);
+			double len = d.length();
+			if (len > 0.05 && len < 10.0) {
+				int n = (int) Math.max(1.0, Math.min(8.0, len / 0.35));
+				for (int i = 0; i < n; i++) {
+					double f = i / (double) n;
+					Pt.add(ModParticles.CORE, prev.x + d.x * f, prev.y + 0.1 + height * 0.5 + d.y * f, prev.z + d.z * f, 0.0, 0.0, 0.0);
+				}
+			}
+		}
+		prev = pos;
+		prevTime = now;
 		return true;
 	}
 }

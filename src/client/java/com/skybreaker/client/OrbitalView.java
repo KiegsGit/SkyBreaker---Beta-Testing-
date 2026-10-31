@@ -223,7 +223,7 @@ final class OrbitalView {
 
 	// ------------------------------------------------------------------------------------------------ main
 
-	static void render(GuiGraphicsExtractor g, int w, int h, int weapon, int age, int total, int tgx, int tgy, int tgz, int distance) {
+	static void render(GuiGraphicsExtractor g, int w, int h, int weapon, int age, int total, int tgx, int tgy, int tgz, int distance, int realRemaining) {
 		int shown = Math.max(1, Math.min(8, weapon));
 		weapon = VIS[shown];
 		var font = Minecraft.getInstance().font;
@@ -232,7 +232,7 @@ final class OrbitalView {
 		if (oa <= 0f) {
 			return;
 		}
-		int remaining = Math.max(0, total - age);
+		int remaining = Math.max(0, realRemaining);
 		int accent = ACCENT[shown];
 
 		// layout (fractions of the screen; must match the baked textures)

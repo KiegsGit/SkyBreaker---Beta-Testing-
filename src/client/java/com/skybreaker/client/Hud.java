@@ -39,6 +39,11 @@ final class CinematicHud {
 	};
 	/** Ticks over which the camera is eased toward the target. */
 	private static final int CAMERA_TICKS = 38;
+	/**
+	 * Length of the fullscreen orbital view at the start of a countdown. After it the real world is visible again, so
+	 * you can watch the strike (and, for the Tracking Strike, the lock following the target) instead of a cutscene.
+	 */
+	private static final int STINGER = 30;
 
 	/** Length of the third-person orbit shot that opens the cutscene (ticks), 0 when disabled or the countdown is too short. */
 	private static int orbit = 0;
@@ -63,7 +68,7 @@ final class CinematicHud {
 		weapon = Math.max(1, Math.min(8, p.b()));
 		extra = p.data().length > 0 ? Math.max(0, (int) p.data()[0]) : 0;
 		distance = p.f();
-		orbit = (SkybreakerConfig.get().cinematicCamera && total >= 50) ? 24 : 0;
+		orbit = (SkybreakerConfig.get().cinematicCamera && total >= 50 && weapon != 8) ? 16 : 0;
 		var pl = Minecraft.getInstance().player;
 		if (pl != null) {
 			startYaw = pl.getYRot();
@@ -107,6 +112,29 @@ final class CinematicHud {
 		return active;
 	}
 
+	/** Ticks the fullscreen orbital view is shown. The Tracking Strike never uses it, so the world stays visible. */
+	private static int view() {
+		return weapon == 8 ? 0 : Math.max(0, Math.min(STINGER, total - orbit));
+	}
+
+	/** 0 while the cutscene is up, easing to 1 once the player is looking at the real world again. */
+	private static float liveK() {
+		return weapon == 8 ? 1f : clamp01((age - (orbit + view())) / 10f);
+	}
+
+	/** Tracking Strike: the server sends the target's current position every tick; keep the readout on it. */
+	static void track(Vec3 p) {
+		if (active && weapon == 8) {
+			tx = p.x;
+			ty = p.y;
+			tz = p.z;
+			var pl = Minecraft.getInstance().player;
+			if (pl != null) {
+				distance = pl.position().distanceTo(p);
+			}
+		}
+	}
+
 	static void clear() {
 		active = false;
 		flashAlpha = 0f;
@@ -126,7 +154,7 @@ final class CinematicHud {
 
 	/** True while the camera should still be easing toward the target. */
 	static boolean cameraActive() {
-		return active && age < CAMERA_TICKS;
+		return active && weapon != 8 && age < CAMERA_TICKS;
 	}
 
 	/** The point the camera looks at (for the black hole: the point where it hangs). */
@@ -179,7 +207,10 @@ final class CinematicHud {
 			float in = Math.min(1f, age / 10f);
 			float out = Math.max(0f, Math.min(1f, (age - (pullEnd + 10)) / 14f));
 			float bar = in * (1f - out);
-			int barH = (int) (h * 0.12f * bar);
+			float liveK = liveK();
+			float fx = 1f - liveK;
+			// full letterbox for the stinger, then slim bars so the world is clearly visible
+			int barH = (int) (h * 0.12f * bar * (1f - 0.78f * liveK));
 
 			// tint: cold blue, red in the final second; the black hole goes deep violet instead
 			int remaining = total - age;
@@ -188,11 +219,11 @@ final class CinematicHud {
 				g.fill(0, 0, w, h, argb((int) (20 + 46 * pp), 0x20003A));
 				vignette(g, w, h, (int) (10 + 22 * pp), 0x0A0014);
 			} else if (remaining > 0 && remaining < 20) {
-				g.fill(0, 0, w, h, argb((int) (46 * (1f - remaining / 20f)), bh ? 0x9030FF : 0xFF2030));
+				g.fill(0, 0, w, h, argb((int) (46 * (1f - remaining / 20f) * fx), bh ? 0x9030FF : 0xFF2030));
 			} else {
-				g.fill(0, 0, w, h, argb((int) (14 * bar), bh ? 0x7030FF : 0x2090FF));
+				g.fill(0, 0, w, h, argb((int) (14 * bar * fx), bh ? 0x7030FF : 0x2090FF));
 			}
-			vignette(g, w, h, (int) (7 * bar), 0x000000);
+			vignette(g, w, h, (int) (7 * bar * fx), 0x000000);
 
 			g.fill(0, 0, w, barH, 0xFF000000);
 			g.fill(0, h - barH, w, h, 0xFF000000);
@@ -201,7 +232,7 @@ final class CinematicHud {
 			int accentDim = bh ? 0xFF9A5CD0 : CYAN_DIM;
 			int bracketRgb = bh ? 0xC070FF : 0x5CD6FF;
 
-			if (bar > 0.6f) {
+			if (bar > 0.6f && barH >= 14) {
 				g.centeredText(font, "SKYBREAKER // " + NAMES[weapon], w / 2, Math.max(2, barH / 2 - 4), accent);
 				String line = pulling
 					? "SINGULARITY ACTIVE   T+" + (age - total) / 20 + "s   EVENT HORIZON EXPANDING"
@@ -221,8 +252,10 @@ final class CinematicHud {
 			// scanline sweeping down the screen
 			int span = Math.max(1, h - 2 * barH);
 			int sy = barH + (age * 9) % span;
-			g.fill(0, sy, w, sy + 1, argb(70, bracketRgb));
-			if (age < total && bar > 0.6f && !pulling) {
+			if (fx > 0.5f) {
+				g.fill(0, sy, w, sy + 1, argb(70, bracketRgb));
+			}
+			if (age < total && bar > 0.6f && !pulling && fx > 0.5f) {
 				scanFrame(g, w, h, barH, bracketRgb, bar);
 			}
 
@@ -230,16 +263,16 @@ final class CinematicHud {
 				float prog = age / (float) total;
 				int secs = (total - age + 19) / 20;
 				float frac = ((total - age) % 20) / 20f;
-				float scale = 4f + 3f * frac;
+				float scale = (4f - 1.8f * liveK) + (3f - 1.8f * liveK) * frac;
 				g.pose().pushMatrix();
-				g.pose().translate(w / 2f, h / 2f - 34f);
+				g.pose().translate(w / 2f, (h / 2f - 34f) + liveK * ((barH + 26f) - (h / 2f - 34f)));
 				g.pose().scale(scale);
 				g.centeredText(font, String.valueOf(secs), 0, 0, remaining < 20 ? 0xFFFF5060 : 0xFFFFFFFF);
 				g.pose().popMatrix();
 
 				int bw = 150;
 				int x0 = w / 2 - bw / 2;
-				int y0 = h / 2 + 28;
+				int y0 = (int) ((h / 2f + 28f) + liveK * ((barH + 52f) - (h / 2f + 28f)));
 				g.fill(x0 - 1, y0 - 1, x0 + bw + 1, y0 + 5, 0xAA000000);
 				g.fill(x0, y0, x0 + (int) (bw * prog), y0 + 4, accent);
 				String lock = bh ? (prog > 0.92f ? "TEAR STABLE" : "OPENING  " + (int) (prog * 100) + "%")
@@ -256,22 +289,22 @@ final class CinematicHud {
 			} else if (age < pullEnd + 14) {
 				float pop = 1f - (age - pullEnd) / 14f;
 				g.pose().pushMatrix();
-				g.pose().translate(w / 2f, h / 2f - 20f);
-				g.pose().scale(5f + 3f * pop);
+				g.pose().translate(w / 2f, barH + 30f);
+				g.pose().scale(2.6f + 1.4f * pop);
 				g.centeredText(font, bh ? "COLLAPSE" : "FIRE", 0, 0, argb((int) (255 * Math.min(1f, pop + 0.3f)), bh ? 0xE0A0FF : 0xFF4050));
 				g.pose().popMatrix();
 			}
 
 			if (age < total) {
 				// every weapon opens with its own 3D orbital strike view (replaces the old title card)
-				if (age >= orbit) {
-					OrbitalView.render(g, w, h, weapon, age - orbit, total - orbit, (int) Math.floor(tx), (int) Math.floor(ty), (int) Math.floor(tz), (int) distance);
+				int view = view();
+				if (view > 0 && age >= orbit && age < orbit + view) {
+					OrbitalView.render(g, w, h, weapon, age - orbit, view, (int) Math.floor(tx), (int) Math.floor(ty), (int) Math.floor(tz), (int) distance, total - age);
 				}
 				caption(g, font, w, h, barH, accent);
 				recIndicator(g, font, barH);
-				// brighten into the shot as the beam is about to fire
-				if (remaining <= 6) {
-					g.fill(0, 0, w, h, argb((int) (150 * (1f - remaining / 6f)), 0xFFFFFF));
+				if (liveK > 0.3f) {
+					liveReadout(g, font, w, h, barH, accent);
 				}
 			}
 		}
@@ -311,6 +344,18 @@ final class CinematicHud {
 		int y = h - barH - 44;
 		g.fill(w / 2 - tw / 2 - 6, y - 3, w / 2 + tw / 2 + 6, y + 11, argb((int) (150 * vis), 0x000000));
 		g.centeredText(font, text, w / 2, y, argb((int) (255 * vis), accent & 0xFFFFFF));
+	}
+
+	/** Compact target readout shown over the live world. For the Tracking Strike it follows the target every tick. */
+	private static void liveReadout(GuiGraphicsExtractor g, net.minecraft.client.gui.Font font, int w, int h, int barH, int accent) {
+		boolean lockedNow = weapon == 8 && (total - age) <= 12;
+		String state = weapon == 8 ? (lockedNow ? "LOCKED" : "TRACKING") : "TARGET";
+		String line = state + "   " + (int) Math.floor(tx) + " " + (int) Math.floor(ty) + " " + (int) Math.floor(tz)
+			+ "   RNG " + (int) distance + " m";
+		int tw = font.width(line);
+		int y = h - barH - 64;
+		g.fill(w / 2 - tw / 2 - 6, y - 3, w / 2 + tw / 2 + 6, y + 11, argb(150, 0x000000));
+		g.centeredText(font, line, w / 2, y, lockedNow ? 0xFFFF5060 : accent);
 	}
 
 	/** Blinking REC marker in the top-left, under the letterbox. */

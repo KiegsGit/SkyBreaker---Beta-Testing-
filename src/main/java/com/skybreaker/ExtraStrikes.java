@@ -254,6 +254,9 @@ final class TrackingStrike extends Strike {
 	private final int impactTick;
 	private Vec3 last;
 	private Vec3 lockPos;
+	/** Size of the locked target, sent with every live marker so the client can fit the lock rings to it. */
+	private double lastHeight = 1.8;
+	private double lastWidth = 0.8;
 
 	TrackingStrike(ServerLevel level, UUID owner, Vec3 pos, UUID targetId) {
 		super(level, owner, pos);
@@ -302,7 +305,16 @@ final class TrackingStrike extends Strike {
 		Entity e = level.getEntity(targetId);
 		if (e instanceof LivingEntity le && le.isAlive()) {
 			last = new Vec3(le.getX(), le.getY(), le.getZ());
+			AABB bb = le.getBoundingBox();
+			lastHeight = bb.getYsize();
+			lastWidth = bb.getXsize();
 		}
+	}
+
+	/** Live marker on the target: sent EVERY tick while tracking so the lock visibly sticks to a moving target. */
+	private void mark() {
+		StrikeUtil.broadcast(level, last, new FxPayload(FxPayload.MARK, last.x, last.y, last.z, 0,
+			(int) Math.round(lastHeight * 10.0), (float) Math.max(1.0, lastWidth * 1.5), new float[0]));
 	}
 
 	@Override
@@ -311,9 +323,7 @@ final class TrackingStrike extends Strike {
 		countdownTick(countdown, "Tracking Strike");
 		if (age < lockTick) {
 			follow();
-			if (age % 4 == 0) {
-				StrikeUtil.broadcast(level, last, new FxPayload(FxPayload.MARK, last.x, last.y, last.z, 0, 0, 1.6f, new float[0]));
-			}
+			mark();
 		} else if (age == lockTick) {
 			follow();
 			lockPos = last;
