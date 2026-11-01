@@ -13,6 +13,7 @@ public class SkybreakerClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ParticleSetup.register();
+		ConfigUi.init();
 		ClientPlayNetworking.registerGlobalReceiver(FxPayload.TYPE, (payload, context) -> FxManager.handle(payload));
 		HudElementRegistry.attachElementAfter(VanillaHudElements.SUBTITLES, SkybreakerMod.id("cinematic"), CinematicHud::render);
 		HudElementRegistry.attachElementAfter(VanillaHudElements.SUBTITLES, SkybreakerMod.id("remote"), RemoteHud::render);

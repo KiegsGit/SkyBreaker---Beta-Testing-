@@ -488,7 +488,7 @@ final class RemoteHud {
 		String status;
 		int statusColor;
 		if (charging) {
-			status = "RECHARGING " + (int) Math.ceil(pct * cooldownSeconds(item.kind) * (hasChip(mc) ? 0.6 : 1.0)) + "s";
+			status = "RECHARGING " + (int) Math.ceil(pct * cooldownSeconds(item.kind) * (hasChip(mc) ? 1.0 - SkybreakerConfig.get().chipCooldownReduction : 1.0)) + "s";
 			statusColor = 0xFFFFAA33;
 		} else {
 			double d = FxManager.aimDistance;
