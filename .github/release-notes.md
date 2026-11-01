@@ -36,7 +36,9 @@ __CHANGES__
 | Orbital Napalm | Thermite rain and a field of fire |
 | Tactical Nuke | Long countdown, giant blast, mushroom cloud |
 | Tracking Strike | Locks onto a mob or player and follows them |
-| Targeting Chip | Off-hand item: remotes recharge 40% faster |
+| Targeting / Overcharge / Efficiency Chip | Off-hand items: faster recharge / more damage / free shots |
+| Orbital Charge | Ammunition burned by every shot |
+| Uplink Circuit, Orbital Core | Crafting progression components |
 
 ## Quick start
 
@@ -52,13 +54,18 @@ Aim at a block (up to 128 blocks), **right-click** to fire. Get items with:
 /give @s skybreaker:tactical_nuke
 /give @s skybreaker:tracking_strike
 /give @s skybreaker:targeting_chip
+/give @s skybreaker:overcharge_chip
+/give @s skybreaker:efficiency_chip
+/give @s skybreaker:orbital_charge
+/give @s skybreaker:uplink_circuit
+/give @s skybreaker:orbital_core
 ```
 
 Recipes, config options and tips are in the [README](https://github.com/__REPO__#readme).
 
 ## Safe for servers
 
-Set `"terrainDestruction": false` and `"damagePlayers": false` in `config/skybreaker.json` to keep the spectacle without the grief.
+Owner-only config (Esc menu > Sky Breaker Config), `firePermission`, protected zones, banned dimensions, claim-mod support and strike limits. Or set `"terrainDestruction": false` to keep the spectacle without the grief.
 
 > **Warning:** these weapons are extremely destructive. Back up your world first.
 
