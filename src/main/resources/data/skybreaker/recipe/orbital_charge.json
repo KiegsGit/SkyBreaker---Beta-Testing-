@@ -1,0 +1,19 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"category": "equipment",
+	"pattern": [
+		"GBG",
+		"AUA",
+		"GBG"
+	],
+	"key": {
+		"G": "minecraft:gunpowder",
+		"B": "minecraft:blaze_powder",
+		"A": "minecraft:amethyst_shard",
+		"U": "skybreaker:uplink_circuit"
+	},
+	"result": {
+		"id": "skybreaker:orbital_charge",
+		"count": 2
+	}
+}

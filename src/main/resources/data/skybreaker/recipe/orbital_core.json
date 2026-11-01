@@ -1,0 +1,19 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"category": "equipment",
+	"pattern": [
+		"UDU",
+		"NEN",
+		"UDU"
+	],
+	"key": {
+		"U": "skybreaker:uplink_circuit",
+		"D": "minecraft:diamond_block",
+		"N": "minecraft:netherite_ingot",
+		"E": "minecraft:ender_eye"
+	},
+	"result": {
+		"id": "skybreaker:orbital_core",
+		"count": 1
+	}
+}

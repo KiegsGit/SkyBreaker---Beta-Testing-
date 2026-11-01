@@ -1,16 +1,21 @@
 {
 	"type": "minecraft:crafting_shaped",
 	"category": "equipment",
+	"pattern": [
+		"XSX",
+		"EMN",
+		"XCX"
+	],
 	"key": {
-		"C": "minecraft:crying_obsidian",
+		"X": "minecraft:crying_obsidian",
 		"S": "minecraft:echo_shard",
 		"E": "minecraft:ender_eye",
-		"N": "minecraft:nether_star"
+		"M": "skybreaker:meteor_barrage",
+		"N": "minecraft:nether_star",
+		"C": "skybreaker:orbital_core"
 	},
-	"pattern": [
-		"CSC",
-		"ENE",
-		"CSC"
-	],
-	"result": { "id": "skybreaker:black_hole", "count": 1 }
+	"result": {
+		"id": "skybreaker:black_hole",
+		"count": 1
+	}
 }

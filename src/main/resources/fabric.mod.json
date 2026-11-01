@@ -3,7 +3,7 @@
 	"id": "skybreaker",
 	"version": "${version}",
 	"name": "Skybreaker: Orbital Arsenal",
-	"description": "Eight orbital strike remotes - Railgun, Satellite Laser, Meteor Barrage, Singularity Cannon, EMP, Napalm, Tactical Nuke and Tracking Strike - with cinematic cameras, custom sound and a full config.",
+	"description": "Eight orbital strike remotes - Railgun, Satellite Laser, Meteor Barrage, Singularity Cannon, EMP, Napalm, Tactical Nuke and Tracking Strike - with cinematic cameras, ammo, chips, a crafting progression, owner-only server controls and an in-game config.",
 	"authors": ["Skybreaker"],
 	"license": "MIT",
 	"icon": "assets/skybreaker/icon.png",

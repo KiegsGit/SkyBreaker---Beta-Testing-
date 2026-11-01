@@ -1,16 +1,20 @@
 {
 	"type": "minecraft:crafting_shaped",
 	"category": "equipment",
-	"key": {
-		"S": "minecraft:nether_star",
-		"D": "minecraft:diamond_block",
-		"E": "minecraft:end_crystal",
-		"N": "minecraft:netherite_ingot"
-	},
 	"pattern": [
-		"NEN",
-		"DSD",
-		"NEN"
+		"ECE",
+		"SRN",
+		"ECE"
 	],
-	"result": { "id": "skybreaker:satellite_laser", "count": 1 }
+	"key": {
+		"E": "minecraft:end_crystal",
+		"C": "skybreaker:orbital_core",
+		"S": "minecraft:nether_star",
+		"R": "skybreaker:orbital_railgun",
+		"N": "minecraft:netherite_block"
+	},
+	"result": {
+		"id": "skybreaker:satellite_laser",
+		"count": 1
+	}
 }

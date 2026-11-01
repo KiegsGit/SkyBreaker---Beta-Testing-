@@ -8,5 +8,10 @@
 	"item.skybreaker.orbital_napalm": "Orbital Napalm",
 	"item.skybreaker.tactical_nuke": "Tactical Nuke",
 	"item.skybreaker.tracking_strike": "Tracking Strike",
-	"item.skybreaker.targeting_chip": "Targeting Chip"
+	"item.skybreaker.targeting_chip": "Targeting Chip",
+	"item.skybreaker.overcharge_chip": "Overcharge Chip",
+	"item.skybreaker.efficiency_chip": "Efficiency Chip",
+	"item.skybreaker.uplink_circuit": "Uplink Circuit",
+	"item.skybreaker.orbital_core": "Orbital Core",
+	"item.skybreaker.orbital_charge": "Orbital Charge"
 }

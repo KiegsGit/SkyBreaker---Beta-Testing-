@@ -1,16 +1,19 @@
 {
 	"type": "minecraft:crafting_shaped",
 	"category": "equipment",
+	"pattern": [
+		"MSM",
+		"FCF",
+		"MSM"
+	],
 	"key": {
 		"M": "minecraft:magma_block",
+		"S": "minecraft:netherite_ingot",
 		"F": "minecraft:fire_charge",
-		"S": "minecraft:netherite_scrap",
-		"P": "minecraft:ender_pearl"
+		"C": "skybreaker:orbital_core"
 	},
-	"pattern": [
-		"FMF",
-		"SPS",
-		"FMF"
-	],
-	"result": { "id": "skybreaker:meteor_barrage", "count": 1 }
+	"result": {
+		"id": "skybreaker:meteor_barrage",
+		"count": 1
+	}
 }

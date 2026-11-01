@@ -1,18 +1,21 @@
 {
- "type": "minecraft:crafting_shaped",
- "category": "equipment",
- "pattern": [
-  "TNT",
-  "NBN",
-  "TNT"
- ],
- "key": {
-  "T": "minecraft:tnt",
-  "N": "minecraft:netherite_block",
-  "B": "minecraft:beacon"
- },
- "result": {
-  "id": "skybreaker:tactical_nuke",
-  "count": 1
- }
+	"type": "minecraft:crafting_shaped",
+	"category": "equipment",
+	"pattern": [
+		"TBT",
+		"CRC",
+		"NSN"
+	],
+	"key": {
+		"T": "minecraft:tnt",
+		"B": "minecraft:beacon",
+		"C": "skybreaker:orbital_core",
+		"R": "skybreaker:orbital_napalm",
+		"N": "minecraft:netherite_block",
+		"S": "minecraft:nether_star"
+	},
+	"result": {
+		"id": "skybreaker:tactical_nuke",
+		"count": 1
+	}
 }

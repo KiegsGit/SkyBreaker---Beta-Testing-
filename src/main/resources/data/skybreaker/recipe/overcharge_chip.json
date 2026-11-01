@@ -1,0 +1,18 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"category": "equipment",
+	"pattern": [
+		"NBN",
+		"BTB",
+		"NBN"
+	],
+	"key": {
+		"N": "minecraft:netherite_scrap",
+		"B": "minecraft:blaze_rod",
+		"T": "skybreaker:targeting_chip"
+	},
+	"result": {
+		"id": "skybreaker:overcharge_chip",
+		"count": 1
+	}
+}
