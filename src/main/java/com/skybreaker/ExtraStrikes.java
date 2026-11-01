@@ -105,6 +105,9 @@ final class EmpStrike extends Strike {
 					continue;
 				}
 				BlockState st = level.getBlockState(p);
+				if (!Guard.canDestroy(level, p)) {
+					continue;
+				}
 				if (st.is(Blocks.REDSTONE_LAMP) || st.is(Blocks.REDSTONE_TORCH) || st.is(Blocks.REDSTONE_WALL_TORCH)) {
 					if (st.getValue(BlockStateProperties.LIT)) {
 						level.setBlock(p, st.setValue(BlockStateProperties.LIT, false), 3);
@@ -183,7 +186,7 @@ final class NapalmStrike extends Strike {
 			return;
 		}
 		BlockPos p = new BlockPos(x, y, z);
-		if (level.getBlockState(p).isAir() && !level.getBlockState(p.below()).isAir()) {
+		if (level.getBlockState(p).isAir() && !level.getBlockState(p.below()).isAir() && Guard.canDestroy(level, p)) {
 			level.setBlockAndUpdate(p, Blocks.FIRE.defaultBlockState());
 		}
 	}

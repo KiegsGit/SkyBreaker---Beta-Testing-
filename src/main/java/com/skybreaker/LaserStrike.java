@@ -95,7 +95,7 @@ public final class LaserStrike extends Strike {
 	/** Hits everything standing in the beam column (every 10 ticks = every damage-immunity window). */
 	private void burn() {
 		double r = cfg.laserBeamRadius;
-		float perHit = cfg.laserDamagePerSecond / 2.0f;
+		float perHit = (float) (cfg.laserDamagePerSecond / 2.0f * power);
 		AABB box = new AABB(pos.x - r, pos.y - 2.0, pos.z - r, pos.x + r, pos.y + 64.0, pos.z + r);
 		var source = level.damageSources().generic();
 		var ownerPlayer = level.getServer().getPlayerList().getPlayer(owner);
@@ -103,7 +103,7 @@ public final class LaserStrike extends Strike {
 			source = level.damageSources().playerAttack(ownerPlayer);
 		}
 		for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box)) {
-			if (e.isSpectator()) {
+			if (e.isSpectator() || !Guard.canHurt(e)) {
 				continue;
 			}
 			if (e instanceof ServerPlayer sp) {

@@ -126,7 +126,7 @@ public final class StrikeUtil {
 		DamageSource source = owner != null ? level.damageSources().playerAttack(owner) : level.damageSources().generic();
 		AABB box = new AABB(c.x - radius, c.y - radius, c.z - radius, c.x + radius, c.y + radius, c.z + radius);
 		for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box)) {
-			if (e.isSpectator()) {
+			if (e.isSpectator() || !Guard.canHurt(e)) {
 				continue;
 			}
 			if (e instanceof ServerPlayer sp) {
@@ -142,7 +142,7 @@ public final class StrikeUtil {
 			if (dist > radius) {
 				continue;
 			}
-			float amount = (float) (damage * Math.max(0.2, 1.0 - dist / radius));
+			float amount = (float) (damage * Guard.power() * Math.max(0.2, 1.0 - dist / radius));
 			e.hurtServer(level, source, amount);
 			if (e.isAlive()) {
 				if (igniteSeconds > 0) {
@@ -161,7 +161,7 @@ public final class StrikeUtil {
 	/** Same targeting rules as {@link #blast}: spectators never, players only if the config allows it. */
 	public static boolean validTarget(LivingEntity e, UUID ownerId) {
 		SkybreakerConfig cfg = SkybreakerConfig.get();
-		if (e.isSpectator()) {
+		if (e.isSpectator() || !Guard.canHurt(e)) {
 			return false;
 		}
 		if (e instanceof ServerPlayer sp) {
@@ -230,6 +230,9 @@ public final class StrikeUtil {
 			if (cfg.protectBlockEntities && st.hasBlockEntity()) {
 				continue;
 			}
+			if (!Guard.canDestroy(level, bp)) {
+				continue;
+			}
 			float hardness = st.getDestroySpeed(level, bp);
 			if (hardness < 0 || hardness > cfg.maxBlockHardness) {
 				continue;
@@ -255,6 +258,9 @@ public final class StrikeUtil {
 			return 0;
 		}
 		if (cfg.protectBlockEntities && st.hasBlockEntity()) {
+			return 0;
+		}
+		if (!Guard.canDestroy(level, pos)) {
 			return 0;
 		}
 		float hardness = st.getDestroySpeed(level, pos);

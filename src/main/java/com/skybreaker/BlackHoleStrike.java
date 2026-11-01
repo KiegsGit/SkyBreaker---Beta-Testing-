@@ -116,7 +116,7 @@ public final class BlackHoleStrike extends Strike {
 				// stuck in the core: held in place and crushed
 				e.setDeltaMovement(dir.scale(Math.min(0.25, dist * 0.2)).add(0.0, 0.03, 0.0));
 				e.push(0.0, 0.0, 0.0); // marks the new velocity to be sent to clients
-				if (t % 8 == 0) {
+				if (t % 8 == 0 && Guard.canHurt(e)) {
 					e.hurtServer(level, source, 6.0f + (float) (14.0 * prog));
 				}
 			} else {

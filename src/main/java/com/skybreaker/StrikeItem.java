@@ -8,6 +8,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
@@ -40,6 +41,8 @@ public class StrikeItem extends Item {
 	}
 
 	private static final Map<String, Long> COOLDOWNS = new HashMap<>();
+	/** Per player: game time until which NO remote may be fired (global cooldown). */
+	private static final Map<java.util.UUID, Long> GLOBAL_UNTIL = new HashMap<>();
 
 	public final Kind kind;
 
@@ -50,6 +53,20 @@ public class StrikeItem extends Item {
 
 	public static void clearCooldowns() {
 		COOLDOWNS.clear();
+		GLOBAL_UNTIL.clear();
+	}
+
+	/** Returns why this player may not fire, or null if allowed. Re-checked on the server on every shot. */
+	private static String permissionDenied(ServerPlayer sp, SkybreakerConfig cfg) {
+		if (Owner.isOwner(sp)) {
+			return null;
+		}
+		return switch (cfg.firePermission) {
+			case "OWNER_ONLY" -> "Only the server owner may fire orbital remotes.";
+			case "CREATIVE_ONLY" -> sp.isCreative() ? null : "Orbital remotes only work in creative mode on this server.";
+			case "ALLOWLIST" -> cfg.allowedPlayers.contains(sp.getUUID().toString()) ? null : "You are not on this server's remote allowlist.";
+			default -> null;
+		};
 	}
 
 	@Override
@@ -59,7 +76,22 @@ public class StrikeItem extends Item {
 		}
 		SkybreakerConfig cfg = SkybreakerConfig.get();
 
+		String denied = permissionDenied(sp, cfg);
+		if (denied != null) {
+			sp.sendOverlayMessage(Component.literal("\u00a7c" + denied));
+			return InteractionResult.FAIL;
+		}
+		if (Guard.dimensionBlocked(server)) {
+			sp.sendOverlayMessage(Component.literal("\u00a7cStrikes are banned in this dimension."));
+			return InteractionResult.FAIL;
+		}
+
 		long now = server.getGameTime();
+		Long globalUntil = GLOBAL_UNTIL.get(sp.getUUID());
+		if (globalUntil != null && now < globalUntil) {
+			sp.sendOverlayMessage(Component.literal("\u00a7cRemote uplink busy: " + String.format("%.1f", (globalUntil - now) / 20.0) + "s"));
+			return InteractionResult.FAIL;
+		}
 		String key = sp.getUUID() + ":" + kind.name();
 		Long until = COOLDOWNS.get(key);
 		if (until != null && now < until) {
@@ -87,6 +119,32 @@ public class StrikeItem extends Item {
 				return InteractionResult.FAIL;
 			}
 			target = hit.getLocation();
+		}
+
+		String aimDenied = Guard.aimDenied(server, target);
+		if (aimDenied != null) {
+			sp.sendOverlayMessage(Component.literal("\u00a7c" + aimDenied));
+			return InteractionResult.FAIL;
+		}
+		if (StrikeManager.activeCount() >= cfg.maxActiveStrikes) {
+			sp.sendOverlayMessage(Component.literal("\u00a7cToo many strikes in progress on this server. Wait a moment."));
+			return InteractionResult.FAIL;
+		}
+		if (StrikeManager.activeCount(sp.getUUID()) >= cfg.maxActiveStrikesPerPlayer) {
+			sp.sendOverlayMessage(Component.literal("\u00a7cYou already have a strike in progress."));
+			return InteractionResult.FAIL;
+		}
+
+		// ammo: every shot burns Orbital Charges (creative players are exempt)
+		ItemStack chip = sp.getItemInHand(hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+		int cost = cfg.ammoEnabled && !sp.isCreative() ? cfg.ammoFor(kind.name()) : 0;
+		if (cost > 0 && chip.is(ModItems.EFFICIENCY_CHIP) && server.getRandom().nextDouble() < cfg.efficiencyFreeShotChance) {
+			cost = 0;
+			sp.sendOverlayMessage(Component.literal("\u00a7bEfficiency Chip: free shot!"));
+		}
+		if (cost > 0 && Ammo.count(sp) < cost) {
+			sp.sendOverlayMessage(Component.literal("\u00a7c" + kind.display + " needs " + cost + " Orbital Charges (you have " + Ammo.count(sp) + ")."));
+			return InteractionResult.FAIL;
 		}
 
 		Strike strike;
@@ -125,11 +183,19 @@ public class StrikeItem extends Item {
 				cooldown = cfg.meteorCooldownSeconds;
 			}
 		}
-		// a Targeting Chip in the other hand makes every remote recharge 40% faster
-		if (sp.getItemInHand(hand == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND).is(ModItems.TARGETING_CHIP)) {
-			cooldown *= 0.6;
+		// chips (other hand): Targeting = faster recharge, Overcharge = more damage
+		if (chip.is(ModItems.TARGETING_CHIP)) {
+			cooldown *= 1.0 - cfg.chipCooldownReduction;
+		}
+		if (chip.is(ModItems.OVERCHARGE_CHIP)) {
+			strike.power = 1.0 + cfg.overchargeDamageBonus;
+		}
+		if (cost > 0) {
+			Ammo.take(sp, cost);
+			sp.sendOverlayMessage(Component.literal("\u00a77Charges left: " + Ammo.count(sp)));
 		}
 		COOLDOWNS.put(key, now + SkybreakerConfig.ticks(cooldown));
+		GLOBAL_UNTIL.put(sp.getUUID(), now + SkybreakerConfig.ticks(cfg.globalCooldownSeconds));
 		sp.getCooldowns().addCooldown(sp.getItemInHand(hand), SkybreakerConfig.ticks(cooldown));
 		StrikeManager.add(strike);
 		return InteractionResult.SUCCESS;

@@ -10,6 +10,10 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /** JSON config stored at config/skybreaker.json. Missing keys are filled with defaults and written back. */
 public final class SkybreakerConfig {
@@ -20,7 +24,7 @@ public final class SkybreakerConfig {
 	}
 
 	/** Bumped when defaults change; an older file is reset to the new defaults. */
-	public int configVersion = 2;
+	public int configVersion = 3;
 
 	// ---- cinematic / spectacle ----
 	public boolean cinematic = true;
@@ -135,11 +139,78 @@ public final class SkybreakerConfig {
 	/** Loose surface blocks are torn out and flung toward the hole while it pulls. */
 	public boolean blackHoleTerrain = true;
 
+
+	// ---- security / permissions (v2) ----
+	/** Who may fire a remote: EVERYONE, CREATIVE_ONLY, ALLOWLIST (owner + allowedPlayers) or OWNER_ONLY. */
+	public String firePermission = "EVERYONE";
+	/** Who sees the orbital cutscene: FIRER (only the shooter), OWNER (only the server owner, when they fire), EVERYONE (all players nearby). */
+	public String cutsceneMode = "FIRER";
+	/** UUIDs of server owners. The integrated-server host is always an owner; on a dedicated server add yourself with /skybreaker owner add (console). */
+	public List<String> owners = new ArrayList<>();
+	/** UUIDs allowed to fire when firePermission is ALLOWLIST. */
+	public List<String> allowedPlayers = new ArrayList<>();
+	/** Dimension ids where no strike may be aimed (for example "minecraft:the_end"). */
+	public List<String> blockedDimensions = new ArrayList<>();
+	/** Protected circles: "dimension x z radius". No strike may land inside, and nothing inside is destroyed or damaged. */
+	public List<String> protectedZones = new ArrayList<>();
+	/** Ask claim mods (FTB Chunks, Open Parties and Claims, GriefDefender...) through the Common Protection API when it is installed. */
+	public boolean respectClaims = true;
+	/** Maximum number of strikes running at the same time on the whole server. */
+	public int maxActiveStrikes = 3;
+	/** Maximum number of strikes running at the same time per player. */
+	public int maxActiveStrikesPerPlayer = 1;
+	/** After firing ANY remote a player must wait this long before firing another one (stops remote chaining). */
+	public double globalCooldownSeconds = 8.0;
+	/** Log failed owner-only attempts to the server console and warn online owners. */
+	public boolean warnOwnerOnBypass = true;
+
+	// ---- ammo & chips (v2) ----
+	/** Every shot consumes Orbital Charge items from the inventory (creative players are exempt). */
+	public boolean ammoEnabled = true;
+	/** Orbital Charges used per shot, by weapon. */
+	public Map<String, Integer> ammoCost = defaultAmmoCost();
+	public double chipCooldownReduction = 0.25;
+	public double overchargeDamageBonus = 0.35;
+	public double efficiencyFreeShotChance = 0.40;
+
+	private static Map<String, Integer> defaultAmmoCost() {
+		Map<String, Integer> m = new LinkedHashMap<>();
+		m.put("EMP", 1);
+		m.put("TRACKING", 1);
+		m.put("RAILGUN", 2);
+		m.put("METEOR", 3);
+		m.put("NAPALM", 3);
+		m.put("LASER", 4);
+		m.put("BLACKHOLE", 6);
+		m.put("NUKE", 10);
+		return m;
+	}
+
+	public int ammoFor(String kind) {
+		Integer v = ammoCost.get(kind);
+		return v == null ? 1 : Math.max(0, Math.min(v, 64));
+	}
+
 	public static int ticks(double seconds) {
 		return Math.max(1, (int) Math.round(seconds * 20.0));
 	}
 
-	private void validate() {
+	public void validate() {
+		firePermission = oneOf(firePermission, "EVERYONE", "CREATIVE_ONLY", "ALLOWLIST", "OWNER_ONLY");
+		cutsceneMode = oneOf(cutsceneMode, "FIRER", "OWNER", "EVERYONE");
+		owners = clean(owners);
+		allowedPlayers = clean(allowedPlayers);
+		blockedDimensions = clean(blockedDimensions);
+		protectedZones = clean(protectedZones);
+		if (ammoCost == null) {
+			ammoCost = defaultAmmoCost();
+		}
+		maxActiveStrikes = Math.max(1, Math.min(maxActiveStrikes, 50));
+		maxActiveStrikesPerPlayer = Math.max(1, Math.min(maxActiveStrikesPerPlayer, 10));
+		globalCooldownSeconds = Math.max(0.0, Math.min(globalCooldownSeconds, 600.0));
+		chipCooldownReduction = Math.max(0.0, Math.min(chipCooldownReduction, 0.9));
+		overchargeDamageBonus = Math.max(0.0, Math.min(overchargeDamageBonus, 2.0));
+		efficiencyFreeShotChance = Math.max(0.0, Math.min(efficiencyFreeShotChance, 0.9));
 		maxBlocksPerStrike = Math.max(0, Math.min(maxBlocksPerStrike, 50000));
 		maxBlockHardness = Math.max(0f, maxBlockHardness);
 		maxTargetRange = Math.max(8.0, Math.min(maxTargetRange, SkybreakerMod.MAX_RANGE));
@@ -185,6 +256,40 @@ public final class SkybreakerConfig {
 		blackHolePullRadius = Math.max(6.0, Math.min(blackHolePullRadius, 48.0));
 		blackHoleKillRadius = Math.max(1.5, Math.min(blackHoleKillRadius, 8.0));
 		blackHoleCollapseRadius = Math.max(2.0, Math.min(blackHoleCollapseRadius, 24.0));
+	}
+
+
+	private static String oneOf(String v, String... options) {
+		if (v != null) {
+			for (String o : options) {
+				if (o.equalsIgnoreCase(v.trim())) {
+					return o;
+				}
+			}
+		}
+		return options[0];
+	}
+
+	private static List<String> clean(List<String> in) {
+		List<String> out = new ArrayList<>();
+		if (in != null) {
+			for (String s : in) {
+				if (s != null && !s.isBlank() && !out.contains(s.trim())) {
+					out.add(s.trim());
+				}
+			}
+		}
+		return out;
+	}
+
+	/** Writes config/skybreaker.json. */
+	public static synchronized void save() {
+		Path path = FabricLoader.getInstance().getConfigDir().resolve("skybreaker.json");
+		try (Writer writer = Files.newBufferedWriter(path)) {
+			new GsonBuilder().setPrettyPrinting().create().toJson(instance, writer);
+		} catch (Exception e) {
+			SkybreakerMod.LOGGER.error("Could not save config/skybreaker.json", e);
+		}
 	}
 
 	public static void load() {

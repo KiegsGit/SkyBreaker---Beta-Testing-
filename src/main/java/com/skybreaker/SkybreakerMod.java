@@ -24,6 +24,8 @@ public class SkybreakerMod implements ModInitializer {
 		ModParticles.init();
 		ModItems.init();
 		StrikeManager.init();
+		ServerNet.init();
+		SkybreakerCommand.init();
 		SlowMo.init();
 		LOGGER.info("Skybreaker: Orbital Arsenal loaded.");
 	}

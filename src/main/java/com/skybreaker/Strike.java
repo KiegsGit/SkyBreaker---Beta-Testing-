@@ -6,6 +6,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import java.util.UUID;
 
 /** A running weapon effect. All gameplay (timing, damage, terrain) is decided here on the server. */
@@ -15,6 +18,8 @@ public abstract class Strike {
 	protected final Vec3 pos;
 	protected final SkybreakerConfig cfg = SkybreakerConfig.get();
 	protected int age = 0;
+	/** Damage multiplier (Overcharge Chip). Set once by the remote that fires this strike. */
+	public double power = 1.0;
 
 	protected Strike(ServerLevel level, UUID owner, Vec3 pos) {
 		this.level = level;
@@ -43,14 +48,43 @@ public abstract class Strike {
 
 	/** Same, with extra data (data[0] = extra HUD ticks after the countdown, used by the Singularity Cannon). */
 	protected void cinema(int countdownTicks, int weapon, float[] data) {
-		ServerPlayer p = ownerPlayer();
-		if (p != null && cfg.cinematic) {
+		if (!cfg.cinematic) {
+			return;
+		}
+		for (ServerPlayer p : cutsceneViewers()) {
 			ServerPlayNetworking.send(p, new FxPayload(FxPayload.CINEMA, pos.x, pos.y, pos.z, countdownTicks, weapon,
 				(float) p.position().distanceTo(pos), data));
 			StrikeUtil.sound(level, p.position(), ModSounds.REMOTE_BEEP, 1.5f, 1.0f);
 			float secs = Math.max(0.5f, countdownTicks / 20.0f);
 			StrikeUtil.sound(level, p.position(), ModSounds.CHARGE, 3.0f, Math.max(0.5f, Math.min(2.0f, 4.0f / secs)));
 		}
+	}
+
+	/** Who gets the cutscene, decided by the owner with cutsceneMode: FIRER, OWNER or EVERYONE (nearby). */
+	private List<ServerPlayer> cutsceneViewers() {
+		List<ServerPlayer> out = new ArrayList<>();
+		ServerPlayer shooter = ownerPlayer();
+		switch (cfg.cutsceneMode) {
+			case "EVERYONE" -> {
+				double r2 = cfg.effectBroadcastRange * cfg.effectBroadcastRange;
+				for (ServerPlayer p : level.players()) {
+					if (p.distanceToSqr(pos.x, pos.y, pos.z) <= r2) {
+						out.add(p);
+					}
+				}
+			}
+			case "OWNER" -> {
+				if (shooter != null && Owner.isOwner(shooter)) {
+					out.add(shooter);
+				}
+			}
+			default -> {
+				if (shooter != null) {
+					out.add(shooter);
+				}
+			}
+		}
+		return out;
 	}
 
 	protected void tell(String message) {

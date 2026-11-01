@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 /** Holds every running strike and advances them once per tick of their own dimension. */
 public final class StrikeManager {
@@ -18,6 +19,34 @@ public final class StrikeManager {
 			ACTIVE.clear();
 			StrikeItem.clearCooldowns();
 		});
+	}
+
+	public static int activeCount() {
+		return ACTIVE.size();
+	}
+
+	public static int activeCount(UUID owner) {
+		int n = 0;
+		for (Strike s : ACTIVE) {
+			if (s.owner.equals(owner)) {
+				n++;
+			}
+		}
+		return n;
+	}
+
+	/** Stops every running strike (owner command). Returns how many were stopped. */
+	public static int cancelAll() {
+		int n = 0;
+		for (Strike s : new ArrayList<>(ACTIVE)) {
+			try {
+				s.cleanup();
+			} catch (Exception ignored) {
+			}
+			n++;
+		}
+		ACTIVE.clear();
+		return n;
 	}
 
 	public static void add(Strike strike) {
@@ -33,6 +62,7 @@ public final class StrikeManager {
 				continue;
 			}
 			try {
+				Guard.begin(s.owner, s.power);
 				if (s.tick()) {
 					it.remove();
 				}
@@ -43,6 +73,8 @@ public final class StrikeManager {
 				} catch (Exception ignored) {
 				}
 				it.remove();
+			} finally {
+				Guard.end();
 			}
 		}
 	}
