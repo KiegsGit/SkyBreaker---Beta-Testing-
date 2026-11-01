@@ -37,7 +37,7 @@ final class ConfigUi {
 	static void init() {
 		ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
 			if (screen instanceof PauseScreen) {
-				Screens.getButtons(screen).add(Button.builder(Component.literal("Sky Breaker Config"), b -> requestOpen())
+				Screens.getWidgets(screen).add(Button.builder(Component.literal("Sky Breaker Config"), b -> requestOpen())
 					.bounds(6, 6, 130, 20).build());
 			}
 		});
@@ -63,16 +63,16 @@ final class ConfigUi {
 		switch (v.mode()) {
 			case ConfigView.OPEN -> {
 				rows = parse(v.text());
-				mc.setScreen(new MenuScreen());
+				mc.gui.setScreen(new MenuScreen());
 			}
 			case ConfigView.REFRESH -> {
 				rows = parse(v.text());
-				if (mc.screen instanceof OwnerScreen s) {
+				if (mc.gui.screen() instanceof OwnerScreen s) {
 					s.onData();
 				}
 			}
 			default -> {
-				if (mc.screen instanceof OwnerScreen s) {
+				if (mc.gui.screen() instanceof OwnerScreen s) {
 					s.setStatus(v.text());
 				} else {
 					pendingStatus = v.text();
@@ -144,9 +144,9 @@ final class ConfigUi {
 			int cx = width / 2;
 			int y = height / 2 - 40;
 			header("Sky Breaker - owner panel");
-			addRenderableWidget(Button.builder(Component.literal("Config"), b -> Minecraft.getInstance().setScreen(new SettingsScreen(0)))
+			addRenderableWidget(Button.builder(Component.literal("Config"), b -> Minecraft.getInstance().gui.setScreen(new SettingsScreen(0)))
 				.bounds(cx - 100, y, 200, 20).build());
-			addRenderableWidget(Button.builder(Component.literal("Commands"), b -> Minecraft.getInstance().setScreen(new CommandsScreen()))
+			addRenderableWidget(Button.builder(Component.literal("Commands"), b -> Minecraft.getInstance().gui.setScreen(new CommandsScreen()))
 				.bounds(cx - 100, y + 26, 200, 20).build());
 			addRenderableWidget(Button.builder(Component.literal("Close"), b -> onClose())
 				.bounds(cx - 100, y + 62, 200, 20).build());
@@ -188,7 +188,7 @@ final class ConfigUi {
 			List<List<Row>> pages = pages();
 			if (pages.isEmpty()) {
 				header("No settings received");
-				addRenderableWidget(Button.builder(Component.literal("Back"), b -> Minecraft.getInstance().setScreen(new MenuScreen()))
+				addRenderableWidget(Button.builder(Component.literal("Back"), b -> Minecraft.getInstance().gui.setScreen(new MenuScreen()))
 					.bounds(width / 2 - 100, height / 2, 200, 20).build());
 				return;
 			}
@@ -203,7 +203,7 @@ final class ConfigUi {
 			}
 			int by = Math.min(height - 54, y + 8);
 			addRenderableWidget(Button.builder(Component.literal("< Prev"), b -> go(-1)).bounds(width / 2 - 110, by, 70, 20).build());
-			addRenderableWidget(Button.builder(Component.literal("Back"), b -> Minecraft.getInstance().setScreen(new MenuScreen())).bounds(width / 2 - 35, by, 70, 20).build());
+			addRenderableWidget(Button.builder(Component.literal("Back"), b -> Minecraft.getInstance().gui.setScreen(new MenuScreen())).bounds(width / 2 - 35, by, 70, 20).build());
 			addRenderableWidget(Button.builder(Component.literal("Next >"), b -> go(1)).bounds(width / 2 + 40, by, 70, 20).build());
 			statusLine(by + 26);
 		}
@@ -263,7 +263,7 @@ final class ConfigUi {
 			y = cmd("Stop all active strikes", "cancelall", cx, y);
 			y = cmd("Clear all remote cooldowns", "clearcd", cx, y);
 			y = cmd("Protect my position (radius 64)", "zonehere", cx, y);
-			addRenderableWidget(Button.builder(Component.literal("Back"), b -> Minecraft.getInstance().setScreen(new MenuScreen()))
+			addRenderableWidget(Button.builder(Component.literal("Back"), b -> Minecraft.getInstance().gui.setScreen(new MenuScreen()))
 				.bounds(cx - 110, y + 6, 220, 20).build());
 			statusLine(y + 34);
 			addRenderableWidget(new StringWidget(cx - 200, y + 50, 400, 12,
